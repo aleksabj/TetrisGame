@@ -1,0 +1,11 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="https://github.com/avaloniaui"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="TetrisGame.MainWindow"
+        Title="Tetris"
+        Width="400" Height="800">
+
+    <Canvas x:Name="GameCanvas" Background="Black"/>
+</Window>
