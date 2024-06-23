@@ -21,7 +21,8 @@ namespace TetrisGame
         private const int Rows = CanvasHeight / CellSize;
         private const int MaxConsecutiveSamePiece = 2;
 
-        private readonly Bitmap squareBitmap;
+        private readonly Dictionary<string, Bitmap> squareBitmaps;
+        private Bitmap currentBitmap;
         private bool[,] gameGrid;
         private DispatcherTimer gameTimer;
         private string currentPiece;
@@ -35,8 +36,9 @@ namespace TetrisGame
         {
             InitializeComponent();
             gameGrid = new bool[Columns, Rows];
-            squareBitmap = LoadSquareBitmap();
+            squareBitmaps = LoadSquareBitmaps();
             currentPiece = GetRandomPiece();
+            currentBitmap = GetRandomBitmap();
             currentPiecePositions = GetPiecePositions(currentPiece);
             gameTimer = new DispatcherTimer
             {
@@ -46,10 +48,23 @@ namespace TetrisGame
             StartGame();
         }
 
-        private Bitmap LoadSquareBitmap()
+        private Dictionary<string, Bitmap> LoadSquareBitmaps()
         {
-            var path = "pieces/square.png";
-            return File.Exists(path) ? new Bitmap(path) : null;
+            var bitmaps = new Dictionary<string, Bitmap>();
+            var files = Directory.GetFiles("pieces", "*.png");
+            foreach (var file in files)
+            {
+                var fileName = Path.GetFileNameWithoutExtension(file);
+                bitmaps[fileName] = new Bitmap(file);
+            }
+            return bitmaps;
+        }
+
+        private Bitmap GetRandomBitmap()
+        {
+            var keys = squareBitmaps.Keys.ToList();
+            var key = keys[random.Next(keys.Count)];
+            return squareBitmaps[key];
         }
 
         private void StartGame()
@@ -70,9 +85,10 @@ namespace TetrisGame
             DrawGame(context);
         }
 
+        
+
         private void DrawGame(DrawingContext context)
         {
-            // Draw the game grid
             for (int y = 0; y < Rows; y++)
             {
                 for (int x = 0; x < Columns; x++)
@@ -80,9 +96,9 @@ namespace TetrisGame
                     if (gameGrid[x, y])
                     {
                         var rect = new Rect(x * CellSize, y * CellSize, CellSize, CellSize);
-                        if (squareBitmap != null)
+                        if (currentBitmap != null)
                         {
-                            context.DrawImage(squareBitmap, rect);
+                            context.DrawImage(currentBitmap, rect);
                         }
                     }
                 }
@@ -91,14 +107,18 @@ namespace TetrisGame
             // Draw the current piece
             foreach (var position in currentPiecePositions)
             {
-                if (squareBitmap != null)
+                if (currentBitmap != null)
                 {
                     var rect = new Rect(position.X * CellSize, position.Y * CellSize, CellSize, CellSize);
-                    context.DrawImage(squareBitmap, rect);
+                    context.DrawImage(currentBitmap, rect);
                 }
             }
+            var gameOverLineY = 4; 
+            var gameOverLineStartPoint = new Point(0, gameOverLineY * CellSize);
+            var gameOverLineEndPoint = new Point(CanvasWidth, gameOverLineY * CellSize);
+            var gameOverLinePen = new Pen(Brushes.Red, 2, DashStyle.Dash);
+            context.DrawLine(gameOverLinePen, gameOverLineStartPoint, gameOverLineEndPoint);
 
-            // Draw the score
             var scoreText = new FormattedText(
                 $"Score: {score}",
                 CultureInfo.CurrentCulture,
@@ -109,6 +129,7 @@ namespace TetrisGame
             );
             context.DrawText(scoreText, new Point(10, 10));
         }
+
 
         private List<PixelPoint> GetPiecePositions(string pieceType, int offsetX = 0, int offsetY = 0)
         {
@@ -225,14 +246,35 @@ namespace TetrisGame
 
                 LockCurrentPiece();
                 currentPiece = GetRandomPiece();
+                currentBitmap = GetRandomBitmap();
                 currentPiecePositions = GetPiecePositions(currentPiece);
 
-                if (IsPieceColliding())
+                if (IsPieceColliding() && IsGameOver())
                 {
                     gameTimer.Stop();
                     // Handle game over
+                    RestartGame();
+            }
+            }
+        }
+        private bool IsGameOver() {
+            var gameOverLineY = 4; 
+            foreach (var position in currentPiecePositions) {
+                if (position.Y <= gameOverLineY) {
+                    return true;
                 }
             }
+            return false;
+        }
+
+        private void RestartGame()
+        {
+            gameGrid = new bool[Columns, Rows];
+            score = 0;
+            currentPiece = GetRandomPiece();
+            currentBitmap = GetRandomBitmap();
+            currentPiecePositions = GetPiecePositions(currentPiece);
+            gameTimer.Start();
         }
 
         private bool IsPieceColliding()
@@ -340,35 +382,33 @@ namespace TetrisGame
             }
         }
 
-        
-
-private void RotatePiece()
-{
-    var center = currentPiecePositions[1];
-    var newPositions = currentPiecePositions.Select(p => new PixelPoint(center.X - center.Y + p.Y, center.Y + center.X - p.X)).ToList();
-
-    if (IsValidPosition(newPositions))
-    {
-        currentPiecePositions = newPositions;
-    }
-}
-
-private bool IsValidPosition(List<PixelPoint> positions)
-{
-    foreach (var position in positions)
-    {
-        if (position.Y < 0 || position.Y >= Rows || position.X < 0 || position.X >= Columns)
+        private void RotatePiece()
         {
-            return false;
+            var center = currentPiecePositions[1];
+            var newPositions = currentPiecePositions.Select(p => new PixelPoint(center.X - center.Y + p.Y, center.Y + center.X - p.X)).ToList();
+
+            if (IsValidPosition(newPositions))
+            {
+                currentPiecePositions = newPositions;
+            }
         }
 
-        if (gameGrid[position.X, position.Y])
+        private bool IsValidPosition(List<PixelPoint> positions)
         {
-            return false;
-        }
-    }
+            foreach (var position in positions)
+            {
+                if (position.Y < 0 || position.Y >= Rows || position.X < 0 || position.X >= Columns)
+                {
+                    return false;
+                }
 
-    return true;
-}
+                if (gameGrid[position.X, position.Y])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }
