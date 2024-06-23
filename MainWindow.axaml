@@ -7,5 +7,14 @@
         Title="Tetris"
         Width="400" Height="800">
 
-    <Canvas x:Name="GameCanvas" Background="Black"/>
+    <Canvas x:Name="GameCanvas" Background="Black" IsVisible="False"/>
+
+    <Grid x:Name="WelcomeGrid" Background="LightGray" ZIndex="1">
+        <TextBlock Text="Welcome" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="30" Margin="0,0,0,40"/>
+        <Button Content="Start the Game" 
+                Width="150" Height="50" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center" 
+                Click="StartGameButton_Click"/>
+    </Grid>
 </Window>

@@ -129,3 +129,4 @@
 /Users/aleksabujor/TetrisGame/obj/Debug/net8.0/TetrisGame.csproj.Up2Date
 /Users/aleksabujor/TetrisGame/obj/Debug/net8.0/TetrisGame.genruntimeconfig.cache
 /Users/aleksabujor/TetrisGame/obj/Debug/net8.0/ref/TetrisGame.dll
+/Users/aleksabujor/TetrisGame/obj/Debug/net8.0/TetrisGame.sourcelink.json
